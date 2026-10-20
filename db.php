@@ -1,12 +1,14 @@
 <?php
- $host = "localhost";
- $user = "root";
- $pass = "";
- $dbname = "login_system";
 
- $conn = new mysqli($host, $user, $pass, $dbname);
+$host = 'localhost';
+$user = 'root';
+$password = '';
+$database = 'joddi_db';
 
-if ($conn->connect_error) {
-    die("Connection failed: " . $conn->connect_error);
+$conn = new mysqli($host, $user, $password, $database);
+
+if ($conn->connect_errno) {
+    exit('Database connection failed: ' . $conn->connect_error);
 }
-?>
+
+$conn->set_charset('utf8mb4');
