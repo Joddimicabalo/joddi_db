@@ -1,14 +1,16 @@
 <?php
+mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
 
-$host = 'localhost';
-$user = 'root';
-$password = '';
-$database = 'joddi_db';
+$host = "localhost";
+$user = "root";
+$password = "";
+$database = "joddi_db";
 
-$conn = new mysqli($host, $user, $password, $database);
-
-if ($conn->connect_errno) {
-    exit('Database connection failed: ' . $conn->connect_error);
+try {
+    $conn = new mysqli($host, $user, $password, $database);
+    $conn->set_charset("utf8mb4");
+} catch (mysqli_sql_exception $e) {
+    error_log("Database connection failed: " . $e->getMessage());
+    exit("Database connection failed. Please check your settings.");
 }
-
-$conn->set_charset('utf8mb4');
+?>
