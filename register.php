@@ -6,30 +6,28 @@ $errors = [];
 $username = '';
 $email = '';
 
-if ($_SERVER["REQUEST_METHOD"] == "POST") {
-    $username = trim($_POST['username']);
-    $email = trim($_POST['email']);
-    $password = $_POST['password'];
-    $confirm = $_POST['confirm_password'];
+if ($_SERVER["REQUEST_METHOD"] === "POST") {
+    $username = trim($_POST['username'] ?? '');
+    $email = trim($_POST['email'] ?? '');
+    $password = $_POST['password'] ?? '';
+    $confirm = $_POST['confirm_password'] ?? '';
 
-    if (empty($username)) {
-        $errors[] = "Username is required";
+    if ($username === '') {
+        $errors[] = "Username is required.";
     }
 
-    if (empty($email)) {
-        $errors[] = "Email is required";
+    if ($email === '') {
+        $errors[] = "Email is required.";
     } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
-        $errors[] = "Invalid email format";
+        $errors[] = "Invalid email format.";
     }
 
-    if (empty($password)) {
-        $errors[] = "Password is required";
-    } elseif (strlen($password) < 6) {
-        $errors[] = "Password must be at least 6 characters";
+    if (strlen($password) < 6) {
+        $errors[] = "Password must be at least 6 characters.";
     }
 
     if ($password !== $confirm) {
-        $errors[] = "Passwords do not match";
+        $errors[] = "Passwords do not match.";
     }
 
     if (empty($errors)) {
@@ -40,21 +38,25 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
              VALUES (?, ?, ?)"
         );
 
-        $stmt->bind_param("sss", $username, $email, $hashed);
-
-        if ($stmt->execute()) {
-            $stmt->close();
-            header("Location: login.php?registered=1");
-            exit;
+        if (!$stmt) {
+            $errors[] = "Could not prepare registration.";
         } else {
-            if ($stmt->errno == 1062) {
-                $errors[] = "Username or Email already exists";
+            $stmt->bind_param("sss", $username, $email, $hashed);
+
+            if ($stmt->execute()) {
+                $stmt->close();
+
+                // Redirect to login after successful registration
+                header("Location: login.php?registered=1");
+                exit;
+            } elseif ($stmt->errno === 1062) {
+                $errors[] = "Username or email already exists.";
+                $stmt->close();
             } else {
                 $errors[] = "Registration failed. Please try again.";
+                $stmt->close();
             }
         }
-
-        $stmt->close();
     }
 }
 ?>
@@ -74,41 +76,29 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         <?php if (!empty($errors)): ?>
             <div class="errors">
                 <?php foreach ($errors as $error): ?>
-                    <p><?= htmlspecialchars($error) ?></p>
+                    <p><?= htmlspecialchars($error, ENT_QUOTES, 'UTF-8') ?></p>
                 <?php endforeach; ?>
             </div>
         <?php endif; ?>
 
-        <form method="POST" action="">
-            <input
-                type="text"
-                name="username"
-                placeholder="Username"
-                value="<?= htmlspecialchars($username) ?>"
-                required
-            >
+        <form method="POST" action="register.php">
+            <input type="text" name="username"
+                   placeholder="Username"
+                   value="<?= htmlspecialchars($username, ENT_QUOTES, 'UTF-8') ?>"
+                   required>
 
-            <input
-                type="email"
-                name="email"
-                placeholder="Email"
-                value="<?= htmlspecialchars($email) ?>"
-                required
-            >
+            <input type="email" name="email"
+                   placeholder="Email"
+                   value="<?= htmlspecialchars($email, ENT_QUOTES, 'UTF-8') ?>"
+                   required>
 
-            <input
-                type="password"
-                name="password"
-                placeholder="Password"
-                required
-            >
+            <input type="password" name="password"
+                   placeholder="Password (minimum 6 characters)"
+                   minlength="6" required>
 
-            <input
-                type="password"
-                name="confirm_password"
-                placeholder="Confirm Password"
-                required
-            >
+            <input type="password" name="confirm_password"
+                   placeholder="Confirm Password"
+                   minlength="6" required>
 
             <button type="submit">Register</button>
         </form>
